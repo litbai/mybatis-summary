@@ -1,0 +1,54 @@
+## XML文件格式
+
+<?xml version="1.0" encoding="UTF-8" ?>     XML 声明
+< !DOCTYPE configuration xx>                DTD 可选
+<root id = "1">                             根元素，只有一个
+    <node1>                                 子元素，可以多个
+    </node1>
+    <node2>                                 元素可以包含属性
+    </node2>
+</root>
+
+## java解析XML一般有四种方式：
+
+    * DOM
+    * SAX（Simple API for XML）
+    * JDOM
+    * DOM4j
+
+DOM和SAX是官方提供的，与平台无关的解析方式，后两种只适用于java平台，是官方的基础方法的扩展。
+
+### DOM
+读取文件，将XML文件解析成一颗树状结构。
+
+    * 优点：可以任意修改某个节点的值。
+    * 缺点：一次性将整个XML读入，解析成一整棵树，速度慢，内存占用大。
+
+
+### SAX
+SAX是一种更快，不用一次性解析整个XML的方式。
+
+    * 优点：速度快，按需解析。
+    * 缺点：无法修改节点的值。
+
+### JDOM
+非面向接口编程，直接使用具体类，不灵活，使用很少。
+
+
+### DOM4J
+DOM4J是JDOM的一个智能分支，具备许多基础功能之外操作XML的功能，推荐。
+
+
+性能： DOM4J > SAX > DOM > JDOM
+
+
+### DOM4J+XPath
+快速访问XML中指定节点的方式，类似于JSON.eval，需要引入
+
+    <dependency>
+            <groupId>jaxen</groupId>
+            <artifactId>jaxen</artifactId>
+            <version>1.1-beta-10</version>
+        </dependency>
+
+JDK自带的XPath没研究过。

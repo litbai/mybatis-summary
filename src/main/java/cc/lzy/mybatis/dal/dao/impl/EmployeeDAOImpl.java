@@ -24,7 +24,7 @@ import java.util.*;
  * Mybatis 查询步骤
  * 1. 根据XML或接口方式创建SqlSessionFactory
  * 2. openSession, sqlSession可以认为就是一个connection，非线程安全，每次都要openSession
- * 3. 执行语句
+ * 3. getMapper, 执行方法
  * 4. 关闭session
  *
  * @author taigai
