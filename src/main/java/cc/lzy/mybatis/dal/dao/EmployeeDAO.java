@@ -7,6 +7,7 @@ package cc.lzy.mybatis.dal.dao;
 import cc.lzy.mybatis.dal.entity.EmployeeDO;
 import cc.lzy.mybatis.domain.model.Paginator;
 import org.apache.ibatis.annotations.MapKey;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.session.SqlSessionFactory;
 

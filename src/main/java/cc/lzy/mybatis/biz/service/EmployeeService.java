@@ -7,6 +7,7 @@ package cc.lzy.mybatis.biz.service;
 
 import cc.lzy.mybatis.domain.model.Employee;
 import cc.lzy.mybatis.domain.model.Paginator;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 

@@ -6,6 +6,7 @@ package cc.lzy.mybatis;
 
 import cc.lzy.mybatis.biz.service.EmployeeService;
 import cc.lzy.mybatis.biz.service.impl.EmployeeServiceImpl;
+import cc.lzy.mybatis.dal.dao.impl.EmployeeDAOImpl;
 import cc.lzy.mybatis.domain.model.Employee;
 import cc.lzy.mybatis.domain.model.enums.LevelEnum;
 import cc.lzy.mybatis.util.DateUtils;
@@ -29,7 +30,7 @@ public class BaseOpTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseOpTest.class);
 
     /** employeeService */
-    EmployeeService employeeService = new EmployeeServiceImpl();
+    EmployeeService employeeService = new EmployeeServiceImpl(new EmployeeDAOImpl());
 
     @Test
     public void testParam() throws NoSuchMethodException {

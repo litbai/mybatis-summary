@@ -12,6 +12,8 @@ import cc.lzy.mybatis.domain.mapper.EmployeeMapper;
 import cc.lzy.mybatis.domain.model.Employee;
 import cc.lzy.mybatis.domain.model.Paginator;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,16 +24,20 @@ import java.util.stream.Collectors;
  * @author taigai
  * @version EmployeeServiceImpl.java, v 0.1 2020年12月26日 11:46 taigai Exp $
  */
+@Service
 public class EmployeeServiceImpl implements EmployeeService {
 
     /** employeeDAO */
+    @Autowired
     private EmployeeDAO employeeDAO;
+
+    public EmployeeServiceImpl() {}
 
     /**
      * 无参构造函数
      */
-    public EmployeeServiceImpl() {
-        this.employeeDAO = new EmployeeDAOImpl();
+    public EmployeeServiceImpl(EmployeeDAO employeeDAO) {
+        this.employeeDAO = employeeDAO;
     }
 
     /**
