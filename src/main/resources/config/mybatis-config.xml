@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<!--  • configuration
+        • properties
+        • settings
+        • typeAliases
+        • typeHandlers
+        • objectFactory
+        • plugins
+        • environments
+            • environment
+                • transactionManager
+                • dataSource
+        • databaseIdProvider
+        • mappers
+-->
+
+<configuration>
+    <!-- These are externalizable, substitutable properties that can be configured in a typical Java Properties
+    file instance, or passed in through sub-elements of the properties element. -->
+    <properties resource="config/jdbc.properties"/>
+
+    <!-- These are extremely important tweaks that modify the way that MyBatis behaves at runtime. -->
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <setting name="logImpl" value="LOG4J2"/>
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+
+    <!-- A type alias is simply a shorter name for a Java type. 
+    It's only relevant to the XML configuration and simply exists to reduce 
+    redundant typing of fully qualified classnames. -->
+    <!-- 别名不区分大小写!!! -->
+    <!-- 推荐使用全限定名，不要使用别名。全限定名更明了，而且可以使用快捷键直接跳转到对应类 -->
+    <!-- There are many built-in type aliases for common Java types. They are all case insensitive,
+    note the special handling of primitives due to the overloaded names. -->
+    <!-- _byte byte
+        _long long
+        _short short
+        _int int
+        _integer int
+        _double double
+        _float float
+        _boolean boolean
+        string String
+        byte Byte
+        long Long
+        short Short
+        int Integer
+        integer Integer
+        double Double
+        float Float
+        boolean Boolean
+        date Date
+        decimal BigDecimal
+        bigdecimal BigDecimal
+        object Object
+        map Map
+        hashmap HashMap
+        list List
+        arraylist ArrayList
+        collection Collection
+        iterator Iterator
+    -->
+    <typeAliases>
+        <!-- 单个别名 -->
+        <typeAlias type="cc.lzy.mybatis.dal.entity.EmployeeDO" alias="employee"/>
+        <!-- 为一个包下的所有类和子包批量起别名，使用包别名的情况下，还可以使用@Alias为单个类起别名，覆盖包别名的规则-->
+        <package name="cc.lzy.mybatis.dal.entity"/>
+    </typeAliases>
+
+    <!-- Whenever MyBatis sets a parameter on a PreparedStatement or retrieves a value from a ResultSet,
+    a TypeHandler is used to retrieve the value in a means appropriate to the Java type. -->
+    <typeHandlers>
+<!--        <typeHandler handler="cc.lzy.mybatis.dal.typehandlers.MyDateTimeTypeHandler"/>-->
+    </typeHandlers>
+
+    <!-- 创建ResultType的对象工厂，默认使用反射constructor.newInstance调用无参构造函数或指定有参构造函数创建对象 -->
+    <!--  <objectFactory type=""></objectFactory>-->
+
+    <!-- MyBatis can be configured with multiple environments.
+    This helps you to apply your SQL Maps to multiple databases for any number of reasons.
+    For example, you might have a different configuration for your Development, Test and Production environments.
+    Or, you may have multiple production databases that share the same schema, and you’d like to use the same SQL maps for both.
+    There are many use cases. -->
+    <!-- 支持多个环境，创建SqlSessionFactory时指定environment，如果不指定，默认使用default指定的environment-->
+    <!-- 包括：transactionManager和dataSource配置 -->
+    <environments default="development">
+        <environment id="development">
+            <!-- 可选：JDBC|MANAGED，也可以自定义，实现 TransactionFactory-->
+            <transactionManager type="JDBC"/>
+            <!-- 可选：UNPOOLED|POOLED|JNDI，也可以自定义，实现 DataSourceFactory-->
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!-- DB标志数据，通过在Mapper.xml文件中，指定 databaseId=mysql数据准备.txt 来匹配此处的配置 -->
+    <databaseIdProvider type="DB_VENDOR">
+        <property name="MySQL" value="mysql"/>
+        <property name="DB2" value="db2"/>
+        <property name="Oracle" value="oracle" />
+    </databaseIdProvider>
+
+    <!-- Mapper配置文件注册，有三种方式 -->
+    <!-- resource: 类路径下  url:磁盘或网络文件  class:注册接口，利用注解，sql和java代码混在一起，不推荐-->
+    <mappers>
+        <mapper resource="mapper/EmployeeMapper-DynamicSql.xml"/>
+        <mapper resource="mapper/EmployeeMapper.xml"/>
+    </mappers>
+</configuration>

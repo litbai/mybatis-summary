@@ -1,0 +1,13 @@
+## 动态sql
+
+动态sql是Mybatis的一个魔法，将大大简化手写SQL（根据不同条件，拼接SQL）
+
+### where
+
+### if
+
+### choose
+
+### foreach
+
+### trim

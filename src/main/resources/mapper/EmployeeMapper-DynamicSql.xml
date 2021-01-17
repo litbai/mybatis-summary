@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cc.lzy.mybatis.dal.dao.EmployeeDAO">
+
+    <!-- 抽取可重用的sql片段 -->
+    <sql id="insert_base_column">
+        <!-- 可以使用${}(不能使用#{}，不支持)引用include标签中自定义的变量，仅做演示，实战没用过这种特性 -->
+        emp_no, name, age, position, level, address, email, ${custom_column}
+    </sql>
+
+    <!-- 只用if，自行拼接1=1，避免AND多余问题（不推荐，推荐使用where标签）-->
+<!--    <select id="queryByNameAndLevelCondition" resultMap="RM_EMPLOYEE">-->
+<!--        select * from Employee where 1=1-->
+<!--        <if test="name != null and name != ''">-->
+<!--            AND name = #{name}-->
+<!--        </if>-->
+<!--        <if test="level != null">-->
+<!--            AND level = #{level}-->
+<!--        </if>-->
+<!--    </select>-->
+
+    <!--  where & if 标签，可以去除最前面的 AND 或者 OR -->
+    <!-- The where element knows to only insert "WHERE" if there is any content returned by the containing tags.
+    Furthermore, if that content begins with "AND" or "OR", it knows to strip it off. -->
+    <select id="where" resultMap="RM_EMPLOYEE">
+        select * from Employee
+        <where>
+            <if test="name != null and name != ''">
+                AND name = #{name}
+            </if>
+            <if test="level != null">
+                AND level = #{level}
+            </if>
+        </where>
+    </select>
+
+    <!-- where就是一种特殊的trim，与其等价的trim如下 ： -->
+<!--    <trim prefix="WHERE" prefixOverrides="AND |OR ">-->
+<!--        ...-->
+<!--    </trim>-->
+    <!-- 我们可以直接使用原生的trim，来完成一些where和set无法胜任的工作，比如去除后面的AND和OR -->
+    <!-- trim标签中是整个条件拼接后的结果字符串S。
+         prefix: 在S前面拼接一个前缀
+         prefixOverrides: 去除S开头指定的字符串
+         suffix: 在S后面拼接一个后缀
+         suffixOverrides: 去除S结尾指定的字符串
+       -->
+    <select id="trim" resultMap="RM_EMPLOYEE">
+        select * from Employee
+        <trim prefix="where" suffixOverrides="AND|OR">
+            <if test="name != null and name != ''">
+                name = #{name} AND
+            </if>
+            <if test="level != null">
+                level = #{level} OR
+            </if>
+            <if test="age != null and age != 0">
+                age = #{age} OR
+            </if>
+        </trim>
+    </select>
+
+
+    <!--  where & if -->
+    <select id="choose" resultMap="RM_EMPLOYEE">
+        select * from Employee where
+        <choose>
+            <when test="age != null and age != 0">
+                age = #{age}
+            </when>
+            <when test="name != null and name != ''">
+                name = #{name}
+            </when>
+            <when test="level != null">
+                level = #{level}
+            </when>
+            <otherwise>
+                emp_no = '0'
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- set，与其等价的trim标签如下 -->
+    <!--
+        <trim prefix="SET" suffixOverrides=",">
+            ...
+        </trim>
+     -->
+    <update id="set">
+        update employee
+        <set>
+            <if test="updated.name != null">
+                name = #{updated.name},
+            </if>
+            <if test="updated.age != null and updated.age > 0">
+                age = #{updated.age},
+            </if>
+            <if test="updated.hireDate!= null">
+                hire_date = #{updated.hireDate},
+            </if>
+        </set>
+        where emp_no = #{empNo}
+        limit 1
+    </update>
+
+    <!-- emp_no, name, age, position, level, address, email, hire_date -->
+    <insert id="saveEmployees">
+        insert into employee(
+            <include refid="insert_base_column">
+                <property name="custom_column" value="hire_date"/>
+            </include>
+        ) values
+        <foreach collection="emps" separator="," item="emp">
+           (#{emp.empNo}, #{emp.name}, #{emp.age}, #{emp.position}, #{emp.level}, #{emp.address}, #{emp.email}, #{emp.hireDate})
+        </foreach>
+    </insert>
+
+    <select id="getByNameLike" resultMap="RM_EMPLOYEE">
+        <!-- bind标签，可以将一个OGNL表达式的值绑定到一个变量上，后续可通过#{}引用此变量 -->
+        <bind name="nameLike" value=" + fuzzyName + '_'"/>
+        select * from employee where name like #{nameLike} limit 10
+        <!-- 可行，但有sql注入风险 -->
+        <!-- select * from employee where name like '%${fuzzyName}%' limit 10-->
+        <!-- 行不通，会报错 -->
+        <!-- select * from employee where name like '%#{fuzzyName}%' limit 10  -->
+    </select>
+
+    <select id="cache" resultMap="RM_EMPLOYEE">
+        select <include refid="base_column"/> from Employee where emp_no = #{empNo}
+    </select>
+
+</mapper>

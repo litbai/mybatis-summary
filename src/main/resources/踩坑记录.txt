@@ -1,0 +1,58 @@
+## 时区问题
+
+### 现象
+1. 查询到的时间比DB中的时间多了14h，比如db中是 2020-12-29 09:30:00 查询结果却为 2020-12-29 23:30:00
+2. 根据hire_date查询不到指定日期的记录
+
+### 原因
+mysql默认时区问题，默认使用的是 SYSTEM， system_time_zone = CST, 跟东八区相差14h
+
+mysql> show variables like '%zone%';
++------------------+--------+
+| Variable_name    | Value  |
++------------------+--------+
+| system_time_zone | CST    |
+| time_zone        | SYSTEM |
++------------------+--------+
+
+代码如下：
+com.mysql.cj.protocol.a.NativeProtocol#configureTimezone
+String configuredTimeZoneOnServer = this.serverSession.getServerVariable("time_zone");
+if ("SYSTEM".equalsIgnoreCase(configuredTimeZoneOnServer)) {
+    configuredTimeZoneOnServer = this.serverSession.getServerVariable("system_time_zone");
+}
+
+### 解决方案
+
+#### 本次生效
+* show variables like '%zone%';
+* set global time_zone = '+8:00';
+* set time_zone = '+8:00';
+* flush privileges;
+
+#### 永久设置
+mysql --help|grep 'my.cnf'
+order of preference, my.cnf, $MYSQL_TCP_PORT,
+/etc/my.cnf /etc/mysql/my.cnf /usr/local/mysql/etc/my.cnf /usr/local/mysql/my.cnf ~/.my.cnf
+
+mac版mysql没有自带配置文件，可以按上述路径自建一个my.cnf文件，内容如下：
+[mysqld]
+default-time-zone='+8:00'
+
+然后重启一下mysql服务即可。
+
+### 乱码问题
+
+#### 现象
+执行如下语句，
+00:22:12.375 [main] DEBUG cc.lzy.mybatis.dal.dao.EmployeeDAO.insert - ==>  Preparing: INSERT INTO Employee(emp_no,name,age,position,level,address,email,hire_date) VALUES (?, ? , ?, ?, ?, ?, ?, ?)
+00:22:12.416 [main] DEBUG cc.lzy.mybatis.dal.dao.EmployeeDAO.insert - ==> Parameters: 000006(String), 宋八(String), 29(Integer), 高级开发工程师(String), P6(String), 杭州市西湖区(String), songba@learning.com(String), 2020-12-27 00:22:12.358(Timestamp)
+
+再次查询时，显示乱码：
+Employee[empNo=000006,name=??,age=29,position=???????,Level=P6,address=??????,email=songba@learning.com,hireTime=Sun Dec 27 00:22:12 CST 2020]
+
+#### 原因
+客户端连接时，未指定编码
+
+#### 解决方案
+jdbc.url=jdbc:mysql://127.0.0.1:3306/mybatis?useUnicode=true&characterEncoding=UTF-8

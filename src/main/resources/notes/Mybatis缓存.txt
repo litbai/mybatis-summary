@@ -1,0 +1,101 @@
+## Mybatis缓存
+
+Mybatis包含一级缓存和二级缓存，其中一级缓存是NameSpace维度，二级缓存是SqlSession维度，所有的缓存指的是均是对同一个SqlSession而言，
+不同的SqlSession缓存不会同步。
+
+
+### 一级缓存
+
+一级缓存是NameSpace维度，默认开启，缓存类型默认是：org.apache.ibatis.cache.impl.PerpetualCache，其是
+org.apache.ibatis.executor.BaseExecutor的一个成员变量。
+
+#### 缓存命中
+对同一个SqlSession发出的多条相同的Sql语句，会命中缓存，不再向DB发送sql命令。
+
+#### 缓存失效
+对于同一个SqlSession，在两次相同的查询之间执行任何一个更新操作（insert、delete、update）都会清除缓存。
+
+也可以手动清除一级缓存，SqlSession#clearCache
+
+具体代码在BaseExecutor中，每次更新操作之后，会调用clearLocalCache()方法
+
+
+### 二级缓存
+
+二级缓存是NameSpace级别缓存，不同的SqlSession可以共享同一个NameSpace下的缓存，需要在Mapper文件里手动开启，且必须配置在最前面。
+
+#### 配置
+
+1. 全局开启/关闭(默认开启)，此配置只影响二级缓存：
+
+    <settings>
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+
+2. Mapper文件cache标签配置缓存（namespace级别，不配置默认此namespace不启用二级缓存）：
+
+       <cache size="1000" readOnly="false" flushInterval="120000"/>
+
+3. DO实现Serializable接口
+
+readOnly为false时，Mybatis会为我们拷贝一份缓存，防止缓存篡改。此时需要特别注意，涉及到对象序列化和反序列化，我们的DO需要实现Serializable接口。
+
+注意：只有SqlSession关闭之后，才会将结果放入二级缓存，后续执行相同的sql才会命中。
+
+### 自定义二级缓存
+
+可以提供二级缓存的实现类，来自定义二级缓存。
+Mybatis实现的不是专业的缓存，所以开放了接口，使用者可以自定义缓存实现类，
+
+
+### 其他配置
+
+1. useCache
+
+    useCache只能用于select标签，默认为true，可以设置为false，此时二级缓存失效，一级缓存不受影响。
+
+    <select id="getByEmpNo" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO" databaseId="mysql" useCache="false">
+        select <include refid="base_column"/> from Employee where emp_no = #{whatever}
+    </select>
+
+2. flushCache
+
+    flushCache对于select标签，默认为false，如果设置为true，会同时清空一级缓存和二级缓存。
+    flushCache对于增删改标签，默认为true，如果设置为true，会同时清空一级缓存和二级缓存。
+
+     <select id="getByEmpNo" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO" databaseId="mysql" flushCache="true">
+            select <include refid="base_column"/> from Employee where emp_no = #{whatever}
+     </select>
+
+3. localCacheScope
+
+    一级缓存作用域，默认为SESSION，也就是sql session级别，另外一个取值为STATEMENT，可以认为是禁用一级缓存。
+
+    MyBatis uses local
+    cache to prevent circular references and speed up repeated nested queries.
+    By default (SESSION) all queries executed during
+    a session are cached. If localCacheScope=STATEMENT local session will be
+    used just for statement execution, no data will
+    be shared between two
+    different calls to the same SqlSession.
+
+
+### 自定义缓存
+
+可以整合ehcache或者caffeine cache等专业缓存实现来替换Mybatis默认的简易缓存
+
+https://github.com/mybatis  主项目下面有很多子项目，Mybatis已经帮我实现了整合各个cache的项目。
+
+比如对于caffeine cache的整合，需要如下配置（http://mybatis.org/caffeine-cache/）：
+
+    <dependency>
+        <groupId>org.mybatis.caches</groupId>
+        <artifactId>mybatis-caffeine</artifactId>
+        <version>1.0.0-beta1</version>
+    </dependency>
+
+    <mapper namespace="org.acme.FooMapper">
+        <cache type="org.mybatis.caches.caffeine.CaffeineCache"/>
+    </mapper>
+
+其他namespace如果使用同样的缓存，可以直接使用标签 cache-ref

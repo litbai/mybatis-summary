@@ -1,0 +1,119 @@
+## Mybatis参数处理
+
+### 单个参数
+
+#### 入参为非 集合/数组 类型
+     Mapper文件中的参数名（#{参数名}）不重要，可以随便指定，下述两种方式都可以成功执行，但是一般我们没必要炫技使用第二种
+
+     <select id="getByEmpNo" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO" databaseId="mysql">
+            select * from Employee where emp_no = #{empNo}
+     </select>
+
+     <select id="getByEmpNo" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO" databaseId="mysql">
+                 select * from Employee where emp_no = #{xxx}
+     </select>
+
+#### 入参为 集合/数组 类型
+
+     * 如果是集合类型(List、Set)，统一key=collection
+     * 如果是Array类型，统一key=array
+     * 如果是集合类型，且进一步确认为List类型，还增加了key=list
+
+    <!-- 单入参，入参为Set，使用key=collection, 而非任意指定 -->
+     <select id="listByEmpNoSet" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+             select * from Employee where emp_no in
+             <foreach collection="collection" item="item" open="(" close=")" separator=",">
+                 #{item}
+             </foreach>
+         </select>
+
+     <!-- 单入参，入参为List，还会额外封装一个key=list, 而非任意指定 -->
+     <select id="listByEmpNoList" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+         select * from Employee where emp_no in
+         <foreach collection="list" item="item" open="(" close=")" separator=",">
+             #{item}
+         </foreach>
+     </select>
+
+      <!-- 单入参，入参为Array类型，key=array，而非任意指定 -->
+      <select id="listByEmpNoArray" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+          select * from Employee where emp_no in
+          <foreach collection="array" item="item" open="(" close=")" separator=",">
+             #{item}
+          </foreach>
+      </select>
+
+### 多个参数时
+
+    多个参数时，Mybatis会将参数封装为一个Map，默认的key为 #{param1} #{param2} ... 或 #{arg0} #{arg1} ..
+    如果我们不显示指定参数名，否则只能使用Mybatis默认的参数名，根据参数的索引，依次为 #{param1} #{param2} ... 或 #{arg0} #{arg1} ...
+
+    如果既不指定参数名，又使用了参数名的名称，则会导致如下报错：
+
+    // Mapper方法签名
+    EmployeeDO getByNameAndLevel(String name, String level);
+
+    // Mapper.xml 配置
+    <select id="getByNameAndLevel" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+                select * from Employee where name = #{name} AND level = #{level}
+    </select>
+
+    Cause: org.apache.ibatis.binding.BindingException: Parameter 'name' not found. Available parameters are [arg1, arg0, param1, param2]
+
+#### 使用@Param注解指定参数名（极力推荐）
+
+     在Mapper接口方法中使用@Param注解显示指定参数名：
+        EmployeeDO getByNameAndLevel(@Param("name") String name, @Param("level") String level);
+        List<EmployeeDO> listByEmpNoListAndLevel(@Param("level") String level, @Param("empNos") List<String> empNos);
+
+
+#### 使用Map入参，指定key值
+
+    // 方法签名，入参为Map
+    EmployeeDO getByNameAndLevel(Map<String, Object> param);
+
+    // 方法调用时，指定Map的key
+    Map<String, Object> param = new HashMap<>();
+    param.put("name", "张三");
+    param.put("level", "P6");
+    employeeMapper.getByNameAndLevel(param);
+
+
+#### 入参为复杂对象
+
+    <!--  void listByPage(@Param("level") String level, @Param("page") Paginator page); -->
+    <select id="listByPage" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where level = #{level} limit #{page.offset}, #{page.pageSize}
+    </select>
+
+#### 使用Mybatis默认参数名（不推荐）
+
+    <!--  多参数，使用Mybatis默认参数名（不推荐！！）  -->
+    <select id="getByNameAndLevel" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+         select * from Employee where name = #{param1} AND level = #{param2}
+    </select>
+
+     <!--  多参数，使用Mybatis默认参数名（不推荐！！）  -->
+    <select id="getByNameAndLevel" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+            select * from Employee where name = #{arg0} AND level = #{arg1}
+    </select>
+
+### 源码
+
+1. 普通的参数处理
+MapperProxy#invoke
+    MapperMethod#execute
+        MethodSignature#convertArgsToSqlCommandParam
+            ParamNameResolver#getNamedParams --> 处理单个参数和多个参数的逻辑在这里
+
+2. 对于单参数为集合类型的处理
+
+MapperProxy#invoke
+    MapperMethod#execute
+        MethodSignature#convertArgsToSqlCommandParam
+            ParamNameResolver#getNamedParams --> 处理单个参数和多个参数的逻辑在这里
+            DefaultSqlSession#selectOne
+                DefaultSqlSession#selectList
+                    DefaultSqlSession#wrapCollection
+
+    DefaultSqlSession#wrapCollection

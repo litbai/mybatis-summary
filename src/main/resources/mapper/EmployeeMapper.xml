@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cc.lzy.mybatis.dal.dao.EmployeeDAO">
+
+    <!--
+        Mapper.xml一级配置元素及配置顺序如下：
+
+        • cache – Configuration of the cache for a given namespace.
+        • cache-ref – Reference to a cache configuration from another namespace.
+        • resultMap – The most complicated and powerful element that describes how to load your objects from the database result sets.
+        • parameterMap – Deprecated! Old-school way to map parameters. Inline parameters are preferred and this element may be removed in the future. Not documented here.
+        • sql – A reusable chunk of SQL that can be referenced by other statements.
+        • insert – A mapped INSERT statement.
+        • update – A mapped UPDATE statement.
+        • delete – A mapped DELETE statement.
+        • select – A mapped SELECT statement.
+
+    -->
+
+    <cache size="1000" readOnly="true" flushInterval="120000"/>
+
+    <!-- 抽取可重用的sql片段 -->
+    <sql id="base_column">
+        id, emp_no, name, age, position, level, address, email, hire_date
+    </sql>
+    
+    <!-- resultMap, 自定义映射关系，一般使用此种方式，来屏蔽DB字段和DO属性的不匹配 -->
+    <!-- select语句中，resultMap 和 resultType 不能同时指定 -->
+    <resultMap id="RM_EMPLOYEE" type="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        <id column="id" property="id"/>
+        <result column="emp_no" property="empNo"/>
+        <result column="name" property="name"/>
+        <result column="age" property="age"/>
+        <result column="level" property="level"/>
+        <result column="address" property="address"/>
+        <result column="email" property="email"/>
+        <result column="hire_date" property="hireDate"/>
+    </resultMap>
+
+    <!--<select id="getByEmpNo" resultType="employee"> 别名，不推荐使用 -->
+    <!--  单参数时，对于非集合/数组类型，参数名可以随便指定, 但一般我们指定为形参名即可, 没必要炫技  -->
+    <select id="getByEmpNo" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO" databaseId="mysql">
+        select <include refid="base_column"/> from Employee where emp_no = #{whatever}
+    </select>
+
+    <!-- ${param} 方式取值-->
+<!--    <select id="getByEmpNo" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">-->
+<!--        select <include refid="base_column"/> from Employee where emp_no = ${arg0}-->
+<!--    </select>-->
+
+    <!--  多参数，需要显示的在DAO接口方法中使用@Param注解指定参数名  -->
+    <select id="getByNameAndLevel" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where name = #{name} AND level = #{level}
+    </select>
+
+    <!--  多参数，使用Mybatis默认参数名（不推荐！！）  -->
+<!--    <select id="getByNameAndLevel" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">-->
+<!--        select * from Employee where name = #{param1} AND level = #{param2}-->
+<!--    </select>-->
+<!--    <select id="getByNameAndLevel" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">-->
+<!--        select * from Employee where name = #{arg0} AND level = #{arg1}-->
+<!--    </select>-->
+
+    <!-- 单入参，入参为集合(List/Set)类型，也会被封装为Map，key为collection，而非任意指定 -->
+
+    <select id="listByEmpNoCollection" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where emp_no in
+        <foreach collection="collection" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="listByEmpNoSet" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where emp_no in
+        <foreach collection="collection" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 单入参，入参为List，还会额外封装一个key=list -->
+    <select id="listByEmpNoList" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where emp_no in
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 单入参，入参为Array类型，key=array，而非任意指定-->
+    <select id="listByEmpNoArray" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where emp_no in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 多入参，其中一入参类型为List，只能自行指定key或使用Mybatis默认的key -->
+    <select id="listByEmpNoListAndLevel" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where level = #{level} and emp_no in
+        <foreach collection="empNos" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 返回值为List时，resultType指的是List中元素的类型 -->
+    <!--  void listByPage(@Param("level") String level, @Param("page") Paginator page); -->
+    <select id="listByPage" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where level = #{level} limit #{page.offset}, #{page.pageSize}
+    </select>
+
+    <select id="listByHireDate" resultType="cc.lzy.mybatis.dal.entity.EmployeeDO">
+        select * from Employee where hire_date = #{hireDate}
+    </select>
+
+    <!--  获取自增主键，底层原理：java.sql.Statement#getGeneratedKeys -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO Employee(emp_no,name,age,position,level,address,email,hire_date)
+        VALUES (#{empNo}, #{name} , #{age}, #{position}, #{level}, #{address}, #{email}, #{hireDate})
+    </insert>
+
+    <!-- selectKey 指定id，必须指定resultType，Mysql使用上述的获取自增主键方式即可 -->
+<!--    <insert id="insert">-->
+<!--        INSERT INTO Employee(emp_no,name,age,position,level,address,email,hire_date)-->
+<!--        VALUES (#{empNo}, #{name} , #{age}, #{position}, #{level}, #{address}, #{email}, #{hireDate})-->
+<!--        <selectKey keyProperty="id" order="AFTER" resultType="long">-->
+<!--            select LAST_INSERT_ID() FROM employee LIMIT 1;-->
+<!--        </selectKey>-->
+<!--    </insert>-->
+
+    <update id="updateByEmpNo">
+        UPDATE Employee
+        SET position = #{position},
+            level = #{level},
+            address=#{address},
+            hire_date=#{hireDate}
+        WHERE emp_no = #{empNo}
+        LIMIT 1
+    </update>
+
+    <delete id="deleteByEmpNo">
+        DELETE FROM Employee WHERE emp_no = #{empNo}
+    </delete>
+
+    <select id="countByLevel" resultType="int">
+        select COUNT(*) from Employee where level = #{level}
+    </select>
+
+    <!-- mapByList -->
+    <select id="mapByEmpNoList" resultMap="RM_EMPLOYEE">
+        select <include refid="base_column"/> from employee WHERE emp_no IN
+        <foreach collection="list" separator="," open="(" close=")" item="item" index="index">
+            #{item}
+        </foreach>
+    </select>
+</mapper>
