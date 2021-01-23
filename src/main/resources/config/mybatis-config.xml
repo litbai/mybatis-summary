@@ -78,6 +78,14 @@
 <!--        <typeHandler handler="cc.lzy.mybatis.dal.typehandlers.MyDateTimeTypeHandler"/>-->
     </typeHandlers>
 
+    <plugins>
+        <plugin interceptor="cc.lzy.mybatis.plugins.LogPlugin">
+            <property name="name" value="lzy"/>
+            <property name="passwd" value="123456"/>
+        </plugin>
+        <plugin interceptor="cc.lzy.mybatis.plugins.TamperingParamPlugin"></plugin>
+    </plugins>
+
     <!-- 创建ResultType的对象工厂，默认使用反射constructor.newInstance调用无参构造函数或指定有参构造函数创建对象 -->
     <!--  <objectFactory type=""></objectFactory>-->
 

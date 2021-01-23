@@ -39,6 +39,12 @@ public class BaseOpTest {
     }
 
     @Test
+    public void testOneQuery() {
+        Employee employee = employeeService.getByEmpNo("000001");
+        LOGGER.info("getByEmpNo 001: {}", employee);
+    }
+
+    @Test
     public void testQuery() {
         // 查询不到
         Employee employee = employeeService.getByEmpNo("001");

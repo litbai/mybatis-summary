@@ -12,11 +12,11 @@ Mybatis整合Spring，主要是如何将以上几个Bean交给Spring容器管理
     * 创建SqlSessionFactory -> SqlSessionFactoryBean 用来创建SqlSessionFactory，交给Spring容器管理
     * openSession -> 注入 SqlSessionTemplate 单例，交给Spring容器管理，SqlSessionTemplate 是线程安全的，具体通过代理模式（SqlSessionInterceptor）来实现。
     * 通过sqlSession获取Mapper实例 -> MapperScanner、MapperScannerConfigurer、ClassPathMapperScanner、MapperFactoryBean 用来创建每一个Mapper的实例，并且每一个Mapper实例（实际是通过代理后的对象, 类型为MapperProxy）都持有SqlSessionTemplate实例的引用，
-    可以执行增删改查。
+    可以执行增删改查。  在Configuration类上添加注解即可自动完成以上操作：@MapperScan("cc.lzy.mybatis.dal.dao")
     * 可以通过@Autowire，将Mapper注入Service层直接使用
 
 Mybatis整合Spring的核心实现类为：SqlSessionFactoryBean、SqlSessionTemplate、MapperFactoryBean
 
-整合SpringBoot，无需自己手动注入上述的Bean，只需简单的配置，autoConfiguration会自动注入上述Bean，
+整合SpringBoot，无需自己手动注入上述的Bean，只需引入对应的starter，加上简单的约定配置，autoConfiguration会自动注入上述Bean，
 核心实现类：org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
 

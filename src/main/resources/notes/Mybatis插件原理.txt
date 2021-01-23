@@ -1,0 +1,139 @@
+## Mybatis插件
+
+
+### 实现原理
+
+Mybatis在创建Executor、StatementHandler、ParameterHandler、ResultSetHandler时均留有扩展点，让开发着可以做一些扩展。
+扩展点由插件实现，具体原理代码如下：
+
+#### Executor（Configuration#newExecutor）
+
+public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
+    executorType = executorType == null ? defaultExecutorType : executorType;
+    executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
+    Executor executor;
+    if (ExecutorType.BATCH == executorType) {
+      executor = new BatchExecutor(this, transaction);
+    } else if (ExecutorType.REUSE == executorType) {
+      executor = new ReuseExecutor(this, transaction);
+    } else {
+      executor = new SimpleExecutor(this, transaction);
+    }
+    if (cacheEnabled) {
+      executor = new CachingExecutor(executor);
+    }
+    executor = (Executor) interceptorChain.pluginAll(executor);
+    return executor;
+  }
+
+
+#### StatementHandler（Configuration#newStatementHandler）
+
+public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
+    statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
+    return statementHandler;
+}
+
+
+#### ParameterHandler（Configuration#newParameterHandler）
+
+public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
+    ParameterHandler parameterHandler = mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
+    parameterHandler = (ParameterHandler) interceptorChain.pluginAll(parameterHandler);
+    return parameterHandler;
+}
+
+#### ResultSetHandler（Configuration#newResultSetHandler）
+
+public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler,
+      ResultHandler resultHandler, BoundSql boundSql) {
+    ResultSetHandler resultSetHandler = new DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
+    resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
+    return resultSetHandler;
+}
+
+### 编写自定义插件
+
+三大步骤：
+
+    1. 编写org.apache.ibatis.plugin.Interceptor接口实现类
+
+    public class LogPlugin implements Interceptor {
+         @Override
+            public Object intercept(Invocation invocation) throws Throwable {
+                return null;
+            }
+
+            @Override
+            public Object plugin(Object target) {
+                return null;
+            }
+
+            @Override
+            public void setProperties(Properties properties) {
+
+            }
+    }
+
+
+    2. 通过注解，标注此插件要拦截的目标对象和目标方法：
+        @Intercepts({
+                @Signature(
+                        type = StatementHandler.class,
+                        method = "parameterize",
+                        args = Statement.class
+                )
+        })
+    3. 注册插件：
+
+         <plugins>
+                <plugin interceptor="cc.lzy.mybatis.plugins.LogPlugin"></plugin>
+         </plugins>
+
+
+### 插件示例：
+
+只拦截StatementHandler：可以看到除了StatementHandler，其他warp和target实际没有变化（底层判断非拦截目标，直接return target）
+
+20:08:04.833 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#plugin, targetClass=class org.apache.ibatis.executor.CachingExecutor, wrapClass=class org.apache.ibatis.executor.CachingExecutor
+20:08:04.859 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#plugin, targetClass=class org.apache.ibatis.scripting.defaults.DefaultParameterHandler, wrapClass=class org.apache.ibatis.scripting.defaults.DefaultParameterHandler
+20:08:04.864 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#plugin, targetClass=class org.apache.ibatis.executor.resultset.DefaultResultSetHandler, wrapClass=class org.apache.ibatis.executor.resultset.DefaultResultSetHandler
+20:08:04.867 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#plugin, targetClass=class org.apache.ibatis.executor.statement.RoutingStatementHandler, wrapClass=class com.sun.proxy.$Proxy9
+
+只拦截parameterize方法：
+20:08:04.920 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#intercept, target: org.apache.ibatis.executor.statement.RoutingStatementHandler@22fcf7ab
+20:08:04.920 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#intercept, method: public abstract void org.apache.ibatis.executor.statement.StatementHandler.parameterize(java.sql.Statement) throws java.sql.SQLException
+20:08:04.920 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#intercept, args: [org.apache.ibatis.logging.jdbc.PreparedStatementLogger@2de23121]
+
+设置properties：
+20:13:22.193 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#setProperties: {passwd=123456, name=lzy}
+
+### 多插件
+
+                         +------------------------------+
+                         |    TAMPERING PARAM PLUGIN    |
+                         |     +--------------------+   |
+                         |     |    LOG PLUGIN      |   |
+                         |     |   +----------+     |   |
+           plugin  <-----|-----|---|  TARGET  |<----|---|----intercept
+                         |     |   +----------+     |   |
+                         |     +--------------------+   |
+                         +------------------------------+
+
+
+#### 注入顺序
+
+按照配置文件中配置的顺序进行注入，多个插件的情况，会生成层层代理对象：
+
+20:26:28.344 [main] INFO cc.lzy.mybatis.plugins.LogPlugin - LogPlugin#plugin, targetClass=class org.apache.ibatis.executor.statement.RoutingStatementHandler, wrapClass=class com.sun.proxy.$Proxy9
+20:26:28.344 [main] INFO cc.lzy.mybatis.plugins.TamperingParamPlugin - TamperingParamPlugin#plugin, targetClass=class com.sun.proxy.$Proxy9, wrapClass=class com.sun.proxy.$Proxy9
+
+#### 执行顺序
+
+与注入顺序相反，因为先执行最外层的代理对象的方法，然后逐层执行里面的代理对象的方法
+TamperingParamPlugin#intercept， target: org.apache.ibatis.executor.statement.RoutingStatementHandler@22fcf7ab
+LogPlugin#intercept, target: org.apache.ibatis.executor.statement.RoutingStatementHandler@22fcf7ab
+
+
+
