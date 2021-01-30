@@ -61,8 +61,10 @@ public class BaseOpTest {
         LOGGER.info("getByHireDate 2020-06-01 09:30:00: {}", byHireDate);
     }
 
+
     @Test
     public void testUpdated() {
+        // 底层使用了不会自动提交事务的session，不会影响最终的DB数据
         Employee emp = newEmp();
         Long id = employeeService.addEmployee(emp);
         LOGGER.info("useGeneratedKeys id: {}", id);
@@ -71,7 +73,7 @@ public class BaseOpTest {
         LOGGER.info("getByEmpNo 000006: {}", byEmpNo);
 
         emp.setPosition("技术专家");
-        emp.setLevel(LevelEnum.P7);
+        emp.setLevel(LevelEnum.P_7);
         int rows = employeeService.updateByEmpNo("000006", emp);
         LOGGER.info("updateByEmpNo 000006, rows: {}", rows);
 
@@ -88,7 +90,7 @@ public class BaseOpTest {
         newEmp.setAddress("杭州市西湖区");
         newEmp.setEmail("songba@learning.com");
         newEmp.setPosition("高级开发工程师");
-        newEmp.setLevel(LevelEnum.P6);
+        newEmp.setLevel(LevelEnum.P_6);
         newEmp.setHireTime(new Date());
         return newEmp;
     }

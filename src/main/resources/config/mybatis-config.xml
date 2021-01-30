@@ -75,7 +75,7 @@
     <!-- Whenever MyBatis sets a parameter on a PreparedStatement or retrieves a value from a ResultSet,
     a TypeHandler is used to retrieve the value in a means appropriate to the Java type. -->
     <typeHandlers>
-<!--        <typeHandler handler="cc.lzy.mybatis.dal.typehandlers.MyDateTimeTypeHandler"/>-->
+        <typeHandler handler="cc.lzy.mybatis.dal.typehandlers.LevelTypeHandler"/>
     </typeHandlers>
 
     <plugins>
@@ -83,7 +83,12 @@
             <property name="name" value="lzy"/>
             <property name="passwd" value="123456"/>
         </plugin>
-        <plugin interceptor="cc.lzy.mybatis.plugins.TamperingParamPlugin"></plugin>
+<!--        <plugin interceptor="cc.lzy.mybatis.plugins.TamperingParamPlugin"></plugin>-->
+        <!-- pageHelper插件  -->
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!-- config params as the following -->
+            <property name="param1" value="value1"/>
+        </plugin>
     </plugins>
 
     <!-- 创建ResultType的对象工厂，默认使用反射constructor.newInstance调用无参构造函数或指定有参构造函数创建对象 -->

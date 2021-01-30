@@ -1,5 +1,8 @@
 package cc.lzy.mybatis.domain.model.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 层级Enum
  *
@@ -8,8 +11,15 @@ package cc.lzy.mybatis.domain.model.enums;
  */
 public enum LevelEnum {
 
-    P5("P5", "初级"), P6("P5", "高级"), P7("P5", "专家"), P8("P5", "高级专家"), P9("P5", "资深专家"), P10("P5", "研究员"),
+    P_4("P4", "助理"), P_5("P5", "初级"), P_6("P6", "高级"), P_7("P7", "专家"), P_8("P8", "高级专家"), P_9("P9", "资深专家"), P_10("P10", "研究员"),
     ;
+
+    private static final Map<String, LevelEnum> CODE_MAP = new HashMap<>();
+    static {
+        for (LevelEnum e : LevelEnum.values()) {
+            CODE_MAP.put(e.getCode(), e);
+        }
+    }
 
     private String code;
     private String desc;
@@ -35,5 +45,12 @@ public enum LevelEnum {
      */
     public String getDesc() {
         return desc;
+    }
+
+    /**
+     * 根据code获取枚举类型
+     */
+    public static LevelEnum ofCode(String code) {
+        return CODE_MAP.get(code);
     }
 }

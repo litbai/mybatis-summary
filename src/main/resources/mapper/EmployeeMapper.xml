@@ -34,7 +34,7 @@
         <result column="emp_no" property="empNo"/>
         <result column="name" property="name"/>
         <result column="age" property="age"/>
-        <result column="level" property="level"/>
+        <result column="level" property="level" typeHandler="cc.lzy.mybatis.dal.typehandlers.LevelTypeHandler"/>
         <result column="address" property="address"/>
         <result column="email" property="email"/>
         <result column="hire_date" property="hireDate"/>
@@ -117,7 +117,7 @@
     <!--  获取自增主键，底层原理：java.sql.Statement#getGeneratedKeys -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO Employee(emp_no,name,age,position,level,address,email,hire_date)
-        VALUES (#{empNo}, #{name} , #{age}, #{position}, #{level}, #{address}, #{email}, #{hireDate})
+        VALUES (#{empNo}, #{name} , #{age}, #{position}, #{level, typeHandler=cc.lzy.mybatis.dal.typehandlers.LevelTypeHandler}, #{address}, #{email}, #{hireDate})
     </insert>
 
     <!-- selectKey 指定id，必须指定resultType，Mysql使用上述的获取自增主键方式即可 -->

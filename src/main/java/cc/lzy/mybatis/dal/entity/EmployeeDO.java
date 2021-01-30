@@ -1,6 +1,7 @@
 package cc.lzy.mybatis.dal.entity;
 
 import cc.lzy.mybatis.common.ToString;
+import cc.lzy.mybatis.domain.model.enums.LevelEnum;
 
 import java.util.Date;
 
@@ -12,23 +13,23 @@ import java.util.Date;
  */
 public class EmployeeDO extends ToString {
 
-    private Long    id;
+    private Long      id;
     /** 员工编号 */
-    private String  empNo;
+    private String    empNo;
     /** 姓名 */
-    private String  name;
+    private String    name;
     /** 年龄 */
-    private Integer age;
+    private Integer   age;
     /** 职位 */
-    private String position;
+    private String    position;
     /** 层级 */
-    private String level;
+    private LevelEnum level;
     /** 住址 */
-    private String  address;
+    private String    address;
     /** 电邮 */
-    private String  email;
+    private String    email;
     /** 入职日期 */
-    private Date hireDate;
+    private Date      hireDate;
 
     /**
      * Getter method for property <tt>id</tt>.
@@ -125,7 +126,7 @@ public class EmployeeDO extends ToString {
      *
      * @return property value of level
      */
-    public String getLevel() {
+    public LevelEnum getLevel() {
         return level;
     }
 
@@ -134,7 +135,7 @@ public class EmployeeDO extends ToString {
      *
      * @param level value to be assigned to property level
      */
-    public void setLevel(String level) {
+    public void setLevel(LevelEnum level) {
         this.level = level;
     }
 

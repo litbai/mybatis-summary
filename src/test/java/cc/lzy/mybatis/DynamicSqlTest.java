@@ -7,6 +7,7 @@ package cc.lzy.mybatis;
 import cc.lzy.mybatis.dal.dao.EmployeeDAO;
 import cc.lzy.mybatis.dal.dao.impl.EmployeeDAOImpl;
 import cc.lzy.mybatis.dal.entity.EmployeeDO;
+import cc.lzy.mybatis.domain.model.enums.LevelEnum;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * @author taigai
@@ -55,7 +57,7 @@ public class DynamicSqlTest {
     @Test
     public void testSet() {
         EmployeeDO updated = new EmployeeDO();
-        updated.setLevel("P0");
+        updated.setLevel(LevelEnum.P_6);
         updated.setHireDate(new Date());
         int rows = employeeDAO.set("000001", updated);
         LOGGER.info("testSet:{}", rows);
@@ -82,7 +84,7 @@ public class DynamicSqlTest {
             emp.setName("BATCH-"+i);
             emp.setAge((int) (Math.random() * 40));
             emp.setHireDate(new Date());
-            emp.setLevel("P4");
+            emp.setLevel(LevelEnum.P_5);
             emp.setAddress("杭州市拱墅区");
             emp.setEmail(emp.getName() + "@learing.com");
             emp.setPosition("实习工程师");
