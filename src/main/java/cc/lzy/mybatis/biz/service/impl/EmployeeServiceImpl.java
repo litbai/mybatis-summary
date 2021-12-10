@@ -14,6 +14,8 @@ import cc.lzy.mybatis.domain.model.Paginator;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     /**
      * @see EmployeeService#getByEmpNo(String) 
      */
+    @Override
     public Employee getByEmpNo(String empNo) {
         EmployeeDO employeeDO = employeeDAO.getByEmpNo(empNo);
         return EmployeeMapper.INSTANCE.toEmployee(employeeDO);
@@ -88,7 +91,11 @@ public class EmployeeServiceImpl implements EmployeeService {
      * @see EmployeeService#updateByEmpNo(String, Employee) 
      */
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int updateByEmpNo(String empNo, Employee updated) {
+        if ("000012".equals(empNo)) {
+            throw new IllegalArgumentException("empNo can not be 000012");
+        }
         updated.setEmpNo(empNo);
         return employeeDAO.updateByEmpNo(EmployeeMapper.INSTANCE.toEmployeeDO(updated));
     }

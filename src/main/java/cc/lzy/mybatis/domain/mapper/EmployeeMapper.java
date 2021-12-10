@@ -48,10 +48,10 @@ public interface EmployeeMapper {
     /**
      * Model->DO
      *
-     * @param Employee employee Model
+     * @param employee employee Model
      * @return Employee DO
      */
     @Mapping(source = "hireTime", target = "hireDate")
-    EmployeeDO toEmployeeDO(Employee employeeDO);
+    EmployeeDO toEmployeeDO(Employee employee);
 
 }

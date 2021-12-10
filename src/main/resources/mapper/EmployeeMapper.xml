@@ -24,7 +24,7 @@
 
     <!-- 抽取可重用的sql片段 -->
     <sql id="base_column">
-        id, emp_no, name, age, position, level, address, email, hire_date
+        id, emp_no, name, age, position, level, address, email, hire_date, quit_time
     </sql>
     
     <!-- resultMap, 自定义映射关系，一般使用此种方式，来屏蔽DB字段和DO属性的不匹配 -->
@@ -38,6 +38,7 @@
         <result column="address" property="address"/>
         <result column="email" property="email"/>
         <result column="hire_date" property="hireDate"/>
+        <result column="quit_time" property="quitTime"/>
     </resultMap>
 
     <!--<select id="getByEmpNo" resultType="employee"> 别名，不推荐使用 -->
@@ -116,8 +117,8 @@
 
     <!--  获取自增主键，底层原理：java.sql.Statement#getGeneratedKeys -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO Employee(emp_no,name,age,position,level,address,email,hire_date)
-        VALUES (#{empNo}, #{name} , #{age}, #{position}, #{level, typeHandler=cc.lzy.mybatis.dal.typehandlers.LevelTypeHandler}, #{address}, #{email}, #{hireDate})
+        INSERT INTO Employee(emp_no,name,age,position,level,address,email,hire_date,quit_time)
+        VALUES (#{empNo}, #{name} , #{age}, #{position}, #{level, typeHandler=cc.lzy.mybatis.dal.typehandlers.LevelTypeHandler}, #{address}, #{email}, #{hireDate}, #{quitTime})
     </insert>
 
     <!-- selectKey 指定id，必须指定resultType，Mysql使用上述的获取自增主键方式即可 -->
@@ -132,6 +133,7 @@
     <update id="updateByEmpNo">
         UPDATE Employee
         SET position = #{position},
+            name = #{name},
             level = #{level},
             address=#{address},
             hire_date=#{hireDate}

@@ -30,6 +30,8 @@ public class EmployeeDO extends ToString {
     private String    email;
     /** 入职日期 */
     private Date      hireDate;
+    /** 离职日期 */
+    private Date      quitTime;
 
     /**
      * Getter method for property <tt>id</tt>.
@@ -191,5 +193,23 @@ public class EmployeeDO extends ToString {
      */
     public void setHireDate(Date hireDate) {
         this.hireDate = hireDate;
+    }
+
+    /**
+     * Getter method for property <tt>quitTime</tt>.
+     *
+     * @return property value of quitTime
+     */
+    public Date getQuitTime() {
+        return quitTime;
+    }
+
+    /**
+     * Setter method for property <tt>quitTime</tt>.
+     *
+     * @param quitTime value to be assigned to property quitTime
+     */
+    public void setQuitTime(Date quitTime) {
+        this.quitTime = quitTime;
     }
 }

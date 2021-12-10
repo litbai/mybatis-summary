@@ -27,7 +27,7 @@ import java.util.List;
 public class BaseOpTest {
 
     /** logger */
-    private static final Logger LOGGER = LoggerFactory.getLogger(BaseOpTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("TEST-DIGEST");
 
     /** employeeService */
     EmployeeService employeeService = new EmployeeServiceImpl(new EmployeeDAOImpl());
@@ -40,7 +40,13 @@ public class BaseOpTest {
 
     @Test
     public void testOneQuery() {
-        Employee employee = employeeService.getByEmpNo("000001");
+        Employee employee = employeeService.getByEmpNo("000052");
+        // 无论是datetime 还是 timestamp 如果不指定长度，默认到秒级，如果需要毫秒级，需要指定长度为3
+        // `hire_date` datetime(3) DEFAULT NULL,
+        // `quit_time` timestamp(3) NOT NULL
+        LOGGER.info("getByEmpNo 001 hire date: {}", employee.getHireTime().getTime());
+        Class clazz = LOGGER.getClass();
+        LOGGER.info("getByEmpNo 001 quit time: {}", employee.getQuitTime().getTime());
         LOGGER.info("getByEmpNo 001: {}", employee);
     }
 
@@ -53,7 +59,7 @@ public class BaseOpTest {
         // 正常查询
         employee = employeeService.getByEmpNo("000001");
         LOGGER.info("getByEmpNo 000001: {}", employee);
-//
+
         List<Employee> byHireDate = employeeService.getByHireDate(DateUtils.parseDate("2020-06-01 00:30:00"));
         LOGGER.info("getByHireDate 2020-06-01 00:30:00: {}", byHireDate);
 
@@ -64,7 +70,6 @@ public class BaseOpTest {
 
     @Test
     public void testUpdated() {
-        // 底层使用了不会自动提交事务的session，不会影响最终的DB数据
         Employee emp = newEmp();
         Long id = employeeService.addEmployee(emp);
         LOGGER.info("useGeneratedKeys id: {}", id);
@@ -82,9 +87,26 @@ public class BaseOpTest {
     }
 
 
+    @Test
+    public void testUpdatedTx() {
+
+
+        Employee emp = employeeService.getByEmpNo("000020");
+        LOGGER.info("getByEmpNo 000020: {}", emp);
+
+        emp.setAddress("maojiaqiao 6# 603");
+
+        int rows = employeeService.updateByEmpNo("000020", emp);
+        LOGGER.info("updateByEmpNo 000020, rows: {}", rows);
+
+        boolean success = employeeService.deleteByEmpNo("000006");
+        LOGGER.info("deleteByEmpNo 000006, success: {}", success);
+    }
+
+
     private static Employee newEmp() {
         Employee newEmp = new Employee();
-        newEmp.setEmpNo("000006");
+        newEmp.setEmpNo("000052");
         newEmp.setName("宋八");
         newEmp.setAge(29);
         newEmp.setAddress("杭州市西湖区");
@@ -92,6 +114,7 @@ public class BaseOpTest {
         newEmp.setPosition("高级开发工程师");
         newEmp.setLevel(LevelEnum.P_6);
         newEmp.setHireTime(new Date());
+        newEmp.setQuitTime(new Date(System.currentTimeMillis() + 123456));
         return newEmp;
     }
 

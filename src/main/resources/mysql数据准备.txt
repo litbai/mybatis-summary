@@ -14,20 +14,21 @@ use mybatis;
 show tables;
 
 # 创建表
-create table `employee` (
-    `id` bigint(20) unsigned not null auto_increment comment '主键',
-    `emp_no` varchar(64) not null comment '员工编号',
-    `name` varchar(256) not null comment '姓名',
-    `age` int(11) unsigned not null comment '年龄',
-    `position` varchar(256) not null comment '职位',
-    `level` varchar(16) not null comment '层级',
-    `address` varchar(256) default null comment '住址',
-    `email` varchar(256) default null comment '电子邮件',
-    `hire_date` datetime default null comment '入职时间',
-    primary key (`id`),
-    unique key `uk_emp_no` (`emp_no`),
-    key `idx_name` (`name`)
-) default charset=utf8mb4 comment '员工基本信息表';
+CREATE TABLE `employee` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `emp_no` varchar(64) NOT NULL COMMENT '员工编号',
+  `name` varchar(256) NOT NULL COMMENT '姓名',
+  `age` int(11) unsigned NOT NULL COMMENT '年龄',
+  `position` varchar(256) NOT NULL COMMENT '职位',
+  `level` varchar(16) NOT NULL COMMENT '层级',
+  `address` varchar(256) DEFAULT NULL COMMENT '住址',
+  `email` varchar(256) NOT NULL,
+  `hire_date` datetime(3) DEFAULT NULL,
+  `quit_time` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_emp_no` (`emp_no`),
+  KEY `idx_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='员工基本信息表'
 
 # 初始化数据
 insert into `employee`(emp_no, name, age, position, level, address, email, hire_date) values ('000001', '张三', 25, '高级开发工程师', 'P6', '杭州市西湖区', 'zhangsan@learing.com', '2020-12-29 09:30:00');
